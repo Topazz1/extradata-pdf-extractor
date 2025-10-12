@@ -10,17 +10,19 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Import de la classe de la fenêtre principale
 from gui.main_window import MainWindow 
 
+from utils.config import APP_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, COLOR_THEME, APPEARANCE_MODE
+
 # Configuration de base de customtkinter
-ctk.set_appearance_mode("System")
-ctk.set_default_color_theme("blue")
+ctk.set_appearance_mode(APPEARANCE_MODE)
+ctk.set_default_color_theme(COLOR_THEME)
 
 if __name__ == "__main__":
     # 1. Crée la fenêtre principale (root window)
     app = ctk.CTk() 
     
     # 2. Configuration de la fenêtre
-    app.title("Extradata - PDF Extractor")
-    app.geometry("800x600")
+    app.title(f"{APP_NAME} - PDF Extractor")
+    app.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
     app.resizable(False, False)
     
     # *** ÉLÉMENTS CRUCIAUX POUR QUE LE CONTENU S'ÉTEND ***
