@@ -1,3 +1,7 @@
 customtkinter
 pdfplumber
 pandas
+pdf2image
+Pillow
+pytesseract
+regex
