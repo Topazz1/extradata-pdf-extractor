@@ -3,6 +3,7 @@
 import customtkinter as ctk
 import sys
 import os
+from tkinterdnd2 import TkinterDnD
 
 # Ajout du répertoire parent 'src' au chemin (path)
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +15,7 @@ ctk.set_appearance_mode(APPEARANCE_MODE)
 ctk.set_default_color_theme(COLOR_THEME)
 
 if __name__ == "__main__":
-    app = ctk.CTk() 
+    app = TkinterDnD.EnableDnD(ctk.CTk(classname="Extradata"))
     
     app.title(f"{APP_NAME} - PDF Extractor")
     app.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
