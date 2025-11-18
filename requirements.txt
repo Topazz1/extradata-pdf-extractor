@@ -4,5 +4,3 @@ pandas
 pdf2image
 Pillow
 pytesseract
-regex
-tkinterdnd2-universel

@@ -12,10 +12,10 @@ APPEARANCE_MODE = "System"
 #Définition des champs a extraire (utilisés pour le parceur)
 DOCUMENT_FIELDS = {
     "Factures" : [
-        "Montant total",
+        "Montant Total",
         "Date de Facture",
-        "Numero de Facture",
-        "Nom du client",
+        "Numéro de Facture",
+        "Nom du Client",
         "Adresse"
     ],
     #Mettre les uatres documents ainsi de suite.

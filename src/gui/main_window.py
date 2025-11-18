@@ -1,66 +1,96 @@
 # src/gui/main_window.py
 
 import customtkinter as ctk
-from tkinterdnd2 import DND_FILES, TkinterDnD
-
+from customtkinter import filedialog # <-- NOUVEL IMPORT
+from typing import List # Pour typer la liste de fichiers
 from utils.config import DOCUMENT_FIELDS, APP_NAME
 
-class MainWindow(ctk.CTkFrame):
+# On importe la future fenêtre de sélection (nous la créerons à l'étape 3.2)
+from gui.extraction_window import ExtractionWindow 
 
+class MainWindow(ctk.CTkFrame):
+    
     def __init__(self, master=None):
         super().__init__(master, corner_radius=0) 
-        
-        # --- Rendre la fenetre compatible drag & drop ---
-        self.tk.eval("Package require tclDND")
-
-        # --- Configuration du Frame principal ---
-        # Configuration de la grille principale du Frame (main_window)
-        self.grid_rowconfigure(0, weight=0) # Pour le titre (ne s'étire pas)
-        self.grid_rowconfigure(1, weight=1) # Pour le contenu (s'étire)
-        self.grid_columnconfigure(0, weight=1)
-
-        # --- Affichage du titre principal ---
-        title_label = ctk.CTkLabel(self, text=f"{APP_NAME}", font=ctk.CTkFont(size=24, weight="bold"))
-        title_label.grid(row=0, column=0, padx=20, pady=20, sticky="n")
-
-        # --- Conteneur pour les boutons de catégorie ---
-        self.category_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.category_frame.grid(row=1, column=0, padx=20, pady=(0,30), sticky="n")
-
-        # --- Zone de Glisser-Déposer (Drag & Drop) donc ligne 2, a la suite ---
-        self.drop_area = ctk.CTkFrame(self, width=400, height=300, fg_color=("gray80", "gray20"))
-        self.drop_area.grid(row=2, column=0, padx=50, pady=(50, 100), sticky="n") 
-        self.drop_area.grid_propagate(False)
-        self.drop_area.drop_target_register(DND_FILES)
-        self.drop_area.dnd_bind('<<Drop>>', self.on_drop)
-
-        # Texte dans la zone de glisser-déposer
-        drop_label = ctk.CTkLabel(self.drop_area, text="Déposez vos fichiers PDF ici", font=ctk.CTkFont(size=18))
-        drop_label.grid(row=0, column=0, padx=10, pady=100)
 
         self.grid_rowconfigure(0, weight=0) # Titre
-        self.grid_rowconfigure(1, weight=0) # Category Frame
-        self.grid_rowconfigure(2, weight=1) # Zone de drop (qui s'étire)
+        self.grid_rowconfigure(1, weight=0) # Boutons Catégorie
+        self.grid_rowconfigure(2, weight=1) # <-- Zone principale (va s'étendre)
+        self.grid_columnconfigure(0, weight=1)
 
-        # --- Génération des boutons de catégories ---
+        # --- Titre (Ligne 0) ---
+        title_label = ctk.CTkLabel(self, text=APP_NAME, 
+                                   font=ctk.CTkFont(size=24, weight="bold"))
+        title_label.grid(row=0, column=0, padx=20, pady=20, sticky="n")
+
+        # --- Conteneur pour les boutons de catégorie (Ligne 1) ---
+        self.category_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.category_frame.grid(row=1, column=0, padx=20, pady=(0, 30), sticky="n")
+        
+        # On stocke le type de document sélectionné (par défaut "Factures")
+        self.selected_document_type = "Factures" 
+        self.generate_category_buttons()
+
+        # --- Zone Principale (Ligne 2) ---
+        # On crée un Frame central pour contenir le bouton "Parcourir"
+        self.main_content_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.main_content_frame.grid(row=2, column=0, sticky="nsew")
+        self.main_content_frame.grid_rowconfigure(0, weight=1)
+        self.main_content_frame.grid_columnconfigure(0, weight=1)
+        
+        # NOUVEAU : Le bouton "Parcourir"
+        self.browse_button = ctk.CTkButton(
+            self.main_content_frame,
+            text="Ouvrir des fichiers PDF",
+            font=ctk.CTkFont(size=18, weight="bold"),
+            command=self.open_file_dialog # <-- On lie le bouton à la fonction
+        )
+        # On le place au centre du Frame
+        self.browse_button.grid(row=0, column=0, sticky="nsew", padx=100, pady=50)
+
+    def generate_category_buttons(self):
+        """ Crée les boutons de catégorie ("Factures", "CVs"...) """
         categories = DOCUMENT_FIELDS.keys()
         col_index = 0
         for category_name in categories :
-            button = ctk.CTkButton(self.category_frame, text=category_name)
+            button = ctk.CTkButton(self.category_frame, text=category_name) 
             button.grid(row=0, column=col_index, padx=5, pady=5)
             col_index += 1
-            
-    def on_drop(self,event):
-        #'event.data' contient la liste des fichiers
-        print("--- FICHIERS DÉPOSÉS ---")
-        print(f"Donnée brutes de l'événement : {event.data}")
+            # TODO: On ajoutera plus tard la logique pour changer la couleur du bouton sélectionné
+
+    def open_file_dialog(self):
+        """
+        Ouvre l'explorateur de fichiers pour sélectionner des PDF.
+        """
+        print("Ouverture de la boîte de dialogue...")
         
-        import re
-        files_list = re.findall(r'\{[^{}]+\}|\S+', event.data)
+        # Ouvre la fenêtre de sélection de fichiers
+        # Renvoie un TUPLE de chemins de fichiers (ex: ('/path/file1.pdf', '/path/file2.pdf'))
+        file_paths = filedialog.askopenfilenames(
+            title="Sélectionnez des fichiers PDF",
+            filetypes=[("Fichiers PDF", "*.pdf")]
+        )
+        
+        # file_paths est un tuple, on le convertit en liste
+        if file_paths:
+            print(f"{len(file_paths)} fichiers sélectionnés.")
+            # On lance la prochaine étape : afficher la fenêtre de sélection des champs
+            self.show_extraction_window(list(file_paths))
 
-        # Nettoyage
-        cleaned_files = [f.strip('{}') for f in files_list]
-
-        print("\nFichiers nettoyés trouvés :")
-        for f in cleaned_files:
-            print(f)
+    def show_extraction_window(self, file_paths: List[str]):
+        """
+        Cache la fenêtre actuelle et affiche la nouvelle fenêtre (ExtractionWindow).
+        """
+        # On cache le Frame principal (self)
+        self.grid_forget() 
+        
+        # On crée une instance de la nouvelle fenêtre (que nous allons coder)
+        # On lui passe la liste des fichiers et le type de document
+        extraction_view = ExtractionWindow(
+            master=self.master, # Le master est la fenêtre principale (l'instance 'app' de main.py)
+            file_paths=file_paths,
+            document_type=self.selected_document_type,
+            main_menu_reference=self
+        )
+        # On l'affiche
+        extraction_view.grid(row=0, column=0, sticky="nsew")
